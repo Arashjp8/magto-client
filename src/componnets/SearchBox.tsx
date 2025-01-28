@@ -1,31 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 import { apiClient } from "../services/apiClient";
+import { SearchApiResponse } from "../types/searchApi";
 
 export default function SearchBox() {
-  const [value, setValue] = useState<string>();
-  const [response, setResponse] = useState<any>();
+  const [response, setResponse] = useState<SearchApiResponse>();
   const ref = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     console.log(response);
   }, [response]);
 
-  const fetchMagnets = async () => {
-    if (value) {
-      setResponse(
-        await apiClient("movie-torrent", "GET", "application/json", {
-          movie_name: value,
-        }),
-      );
-    }
+  const fetchMagnets = async (movieName: string) => {
+    setResponse(
+      await apiClient("movie-torrent", "GET", "application/json", {
+        movie_name: movieName,
+      }),
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (ref.current) {
-      setValue(ref.current.value);
+      await fetchMagnets(ref.current.value);
     }
-    await fetchMagnets();
   };
 
   return (
