@@ -1,11 +1,13 @@
+import SearchBox from "./componnets/SearchBox";
+
 function App() {
   return (
     <div
       className={
-        "w-full min-h-screen flex justify-center items-center text-white text-3xl bg-gray-900"
+        "h-full min-h-dvh font-mono bg-background flex items-center justify-center"
       }
     >
-      mooooo 🐮
+      <SearchBox />
     </div>
   );
 }
