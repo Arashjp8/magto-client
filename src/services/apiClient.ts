@@ -1,24 +1,24 @@
-type ApiRequestBody =
-  | { movie_name: string }
-  | { magnet: string }
-  | { shortMagnet: string };
-
 export async function apiClient(
   endpoint: string,
   method: string,
   contentType: string,
-  body?: ApiRequestBody,
+  queryParam?: Record<string, string>,
 ) {
   try {
-    const baseURL = import.meta.env.VITE_SERVER_BASE_URL;
-    const url = `${baseURL}/${endpoint}`;
+    const baseURL = `${import.meta.env.VITE_SERVER_BASE_URL}`;
+    const url = new URL(`${baseURL}/${endpoint}`);
+
+    if (queryParam) {
+      Object.keys(queryParam).forEach((key) => {
+        url.searchParams.append(key, queryParam[key]);
+      });
+    }
 
     const options: RequestInit = {
       method: method,
       headers: {
         "Content-type": contentType,
       },
-      body: body ? JSON.stringify(body) : undefined,
     };
 
     const response = await fetch(url, options);
