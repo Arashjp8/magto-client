@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import LoadingSpinner from "../assets/icons/LoadingSpinner";
 import { apiClient } from "../services/apiClient";
 import { SearchApiResponse } from "../types/searchApi";
 import { Torrent } from "../types/torrent";
@@ -60,11 +61,15 @@ export default function SearchBox() {
         />
         <button
           type={"submit"}
-          className={
-            "bg-accent text-background py-2 px-6 rounded-xl hover:bg-accent/80 transition"
-          }
+          className={`flex items-center justify-center bg-accent text-background py-2 px-6 rounded-xl hover:bg-accent/80 transition cursor-pointer`}
         >
-          {isLoading ? "Fetching Data..." : "Search"}
+          {isLoading ? (
+            <div className={`${isLoading ? "animate-spin" : ""}`}>
+              <LoadingSpinner />
+            </div>
+          ) : (
+            "Search"
+          )}
         </button>
       </form>
       {torrents && <TorrentList torrents={torrents} />}

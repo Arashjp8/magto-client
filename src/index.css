@@ -5,6 +5,30 @@
   --font-mono: SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
 
+  --animate-fade-in: fade-in 0.3s ease-in-out;
+
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+    }
+
+    20% {
+      opacity: 0.2;
+    }
+
+    50% {
+      opacity: 0.5;
+    }
+
+    80% {
+      opacity: 0.8;
+    }
+
+    100% {
+      opacity: 1;
+    }
+  }
+
   /* colors */
   --color-accent: rgb(169, 182, 101);
   /* #A9B665 */
