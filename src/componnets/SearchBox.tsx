@@ -1,28 +1,43 @@
 import { useEffect, useRef, useState } from "react";
 import { apiClient } from "../services/apiClient";
 import { SearchApiResponse } from "../types/searchApi";
+import { Torrent } from "../types/torrent";
 
 export default function SearchBox() {
   const [response, setResponse] = useState<SearchApiResponse>();
+  const [movieName, setMovieName] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [torrents, setTorrents] = useState<Torrent[] | null>(null);
   const ref = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     console.log(response);
-  }, [response]);
+    console.log("movieName:", movieName);
 
-  const fetchMagnets = async (movieName: string) => {
-    setResponse(
-      await apiClient("movie-torrent", "GET", "application/json", {
-        movie_name: movieName,
-      }),
-    );
+    if (response) {
+      setIsLoading(false);
+      setTorrents(response.torrents);
+    }
+  }, [response, movieName]);
+
+  const fetchMagnets = async (): Promise<void> => {
+    if (movieName) {
+      setIsLoading(true);
+
+      setResponse(
+        await apiClient("movie-torrent", "GET", "application/json", {
+          movie_name: movieName,
+        }),
+      );
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (ref.current) {
-      await fetchMagnets(ref.current.value);
+      setMovieName(ref.current.value);
+      fetchMagnets();
     }
   };
 
@@ -48,9 +63,18 @@ export default function SearchBox() {
             "bg-accent text-background py-2 px-6 rounded-xl hover:bg-accent/80 transition"
           }
         >
-          Search
+          {isLoading ? "Fetching Data..." : "Search"}
         </button>
       </form>
+      {torrents && (
+        <ul>
+          {torrents.map((torrent) => (
+            <li key={torrent.id} className={"text-lg"}>
+              {torrent.title}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
