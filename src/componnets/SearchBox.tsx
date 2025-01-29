@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import LoadingSpinner from "../assets/icons/LoadingSpinner";
 import { apiClient } from "../services/apiClient";
-import { SearchApiResponse } from "../types/searchApi";
+import { SearchApiResponse } from "../types/searchApiResponse";
 import { Torrent } from "../types/torrent";
 import TorrentList from "./TorrentList";
 
@@ -12,17 +12,7 @@ export default function SearchBox() {
   const [torrents, setTorrents] = useState<Torrent[] | null>(null);
   const ref = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    console.log(response);
-    console.log("movieName:", movieName);
-
-    if (response) {
-      setIsLoading(false);
-      setTorrents(response.torrents);
-    }
-  }, [response, movieName]);
-
-  const fetchMagnets = async (): Promise<void> => {
+  const fetchMagnets = useCallback(async (): Promise<void> => {
     if (movieName) {
       setIsLoading(true);
 
@@ -32,14 +22,27 @@ export default function SearchBox() {
         }),
       );
     }
-  };
+  }, [movieName]);
+
+  useEffect(() => {
+    if (movieName) {
+      fetchMagnets();
+    }
+  }, [movieName, fetchMagnets]);
+
+  useEffect(() => {
+    if (response) {
+      setIsLoading(false);
+      setTorrents(response.torrents);
+    }
+  }, [response]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (ref.current) {
       setMovieName(ref.current.value);
-      fetchMagnets();
+      ref.current.blur();
     }
   };
 

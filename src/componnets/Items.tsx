@@ -32,7 +32,7 @@ export default function Items({ isOpen, torrent }: Props) {
         return (
           <div key={index} className={"flex gap-4"}>
             <button
-              className={`${description === "Play" || description === "Magnet" ? "cursor-pointer" : ""}`}
+              className={`${description === "Play" || description === "Magnet" ? "cursor-pointer hover:text-myYeollow" : ""}`}
             >
               <Component />
             </button>
