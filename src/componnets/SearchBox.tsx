@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { apiClient } from "../services/apiClient";
 import { SearchApiResponse } from "../types/searchApi";
 import { Torrent } from "../types/torrent";
+import TorrentList from "./TorrentList";
 
 export default function SearchBox() {
   const [response, setResponse] = useState<SearchApiResponse>();
@@ -44,7 +45,7 @@ export default function SearchBox() {
   return (
     <div
       className={
-        "w-[50%] max-w-[1000px] text-3xl text-icon flex flex-col gap-4"
+        "w-full lg:w-[50%] max-w-[1000px] p-6 text-xl lg:text-3xl text-icon flex flex-col gap-4"
       }
     >
       <h2 className={"font-bold"}>Search For The Movie:</h2>
@@ -66,15 +67,7 @@ export default function SearchBox() {
           {isLoading ? "Fetching Data..." : "Search"}
         </button>
       </form>
-      {torrents && (
-        <ul>
-          {torrents.map((torrent) => (
-            <li key={torrent.id} className={"text-lg"}>
-              {torrent.title}
-            </li>
-          ))}
-        </ul>
-      )}
+      {torrents && <TorrentList torrents={torrents} />}
     </div>
   );
 }
