@@ -24,15 +24,31 @@ export default function Items({ isOpen, torrent }: Props) {
     { Component: Disk, description: torrent.size },
   ];
 
+  const copyToClipboard = (text: string) => {
+    if (!text) return;
+
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        console.log("Copied to clipboard:", text);
+      })
+      .catch((err) => {
+        console.error("Failed to copy:", err);
+      });
+  };
+
   return (
     <div
       className={`flex justify-between items-center ${isOpen ? "animate-fade-in" : ""}`}
     >
-      {iconComponents.map(({ Component, description }, index) => {
+      {iconComponents.map(({ Component, description, content }, index) => {
         return (
           <div key={index} className={"flex gap-4"}>
             <button
               className={`${description === "Play" || description === "Magnet" ? "cursor-pointer hover:text-myYeollow" : ""}`}
+              onClick={() =>
+                description === "Magnet" && content && copyToClipboard(content)
+              }
             >
               <Component />
             </button>
