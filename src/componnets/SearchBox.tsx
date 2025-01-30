@@ -4,6 +4,7 @@ import { apiClient } from "../services/apiClient";
 import { SearchApiResponse } from "../types/searchApiResponse";
 import { Torrent } from "../types/torrent";
 import TorrentList from "./TorrentList";
+import { toast, Toaster } from "sonner";
 
 export default function SearchBox() {
   const [movieName, setMovieName] = useState<string | null>(null);
@@ -45,7 +46,11 @@ export default function SearchBox() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (ref.current && movieName !== ref.current.value) {
+    if (ref.current) {
+      if (movieName === ref.current.value) {
+        toast.error("Already Searched!");
+      }
+
       setMovieName(ref.current.value);
       ref.current.blur();
     }
@@ -60,6 +65,16 @@ export default function SearchBox() {
           type="text"
           className="w-full h-16 px-6 bg-searchbg rounded-xl border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition duration-300 ease-in-out placeholder:text-icon/40"
           placeholder="Type a movie name..."
+        />
+        <Toaster
+          position={"bottom-center"}
+          richColors
+          toastOptions={{
+            classNames: {
+              toast: "font-mono",
+              title: "text-lg",
+            },
+          }}
         />
         <button
           type="submit"

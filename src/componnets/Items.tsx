@@ -4,6 +4,8 @@ import Magnet from "../assets/icons/Magnet";
 import Play from "../assets/icons/Play";
 import Seed from "../assets/icons/Seed";
 import { Torrent } from "../types/torrent";
+import { toast, Toaster } from "sonner";
+import Tick from "../assets/icons/Tick";
 
 interface Props {
   isOpen: boolean;
@@ -44,11 +46,26 @@ export default function Items({ isOpen, torrent }: Props) {
       {iconComponents.map(({ Component, description, content }, index) => {
         return (
           <div key={index} className={"flex gap-4"}>
+            <Toaster
+              position={"bottom-center"}
+              richColors
+              toastOptions={{
+                classNames: {
+                  toast: "font-mono",
+                  title: "text-lg",
+                },
+              }}
+            />
             <button
               className={`${description === "Play" || description === "Magnet" ? "cursor-pointer hover:text-myYeollow" : ""}`}
-              onClick={() =>
-                description === "Magnet" && content && copyToClipboard(content)
-              }
+              onClick={() => {
+                if (description === "Magnet" && content) {
+                  toast.success("Copied to clipboard!", {
+                    icon: <Tick />,
+                  });
+                  copyToClipboard(content);
+                }
+              }}
             >
               <Component />
             </button>
