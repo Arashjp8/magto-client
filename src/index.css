@@ -5,6 +5,7 @@
   --font-mono: SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
 
+  /* animations */
   --animate-fade-in: fade-in 0.3s ease-in-out;
 
   @keyframes fade-in {

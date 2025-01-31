@@ -1,15 +1,8 @@
-import SearchBox from "./componnets/SearchBox";
+import { RouterProvider } from "react-router-dom";
+import router from "./router";
 
 function App() {
-  return (
-    <div
-      className={
-        "h-full min-h-dvh font-mono bg-background flex items-center justify-center"
-      }
-    >
-      <SearchBox />
-    </div>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;

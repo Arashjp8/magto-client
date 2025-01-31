@@ -32,9 +32,12 @@ export default function Items({ isOpen, torrent }: Props) {
     navigator.clipboard
       .writeText(text)
       .then(() => {
-        console.log("Copied to clipboard:", text);
+        toast.success("Copied to clipboard!", {
+          icon: <Tick />,
+        });
       })
       .catch((err) => {
+        toast.error("Failed to copy:");
         console.error("Failed to copy:", err);
       });
   };
@@ -60,9 +63,6 @@ export default function Items({ isOpen, torrent }: Props) {
               className={`${description === "Play" || description === "Magnet" ? "cursor-pointer hover:text-myYeollow" : ""}`}
               onClick={() => {
                 if (description === "Magnet" && content) {
-                  toast.success("Copied to clipboard!", {
-                    icon: <Tick />,
-                  });
                   copyToClipboard(content);
                 }
               }}

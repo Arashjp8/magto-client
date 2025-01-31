@@ -1,9 +1,11 @@
+import { SearchApiResponse } from "../types/searchApiResponse";
+
 export async function apiClient(
   endpoint: string,
   method: string,
   contentType: string,
   queryParam?: Record<string, string>,
-) {
+): Promise<SearchApiResponse> {
   try {
     const baseURL = `${import.meta.env.VITE_SERVER_BASE_URL}`;
     const url = new URL(`${baseURL}/${endpoint}`);
