@@ -1,24 +1,40 @@
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-export default function VideoPlayer() {
+interface Props {
+    shortMagnet: string;
+}
+
+export default function VideoPlayer({ shortMagnet }: Props) {
     const [isLoaded, setIsLoaded] = useState(false);
     const [isTranscoding, setIsTranscoding] = useState(false);
+    const [videoSrc, setVideoSrc] = useState<string | null>(null);
+    const [isTranscodeNeeded, setIsTranscodeNeeded] = useState(false);
     const ffmpegRef = useRef<FFmpeg>(new FFmpeg());
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const messageRef = useRef<HTMLParagraphElement | null>(null);
 
+    const checkTranscodingNeeded = (videoUrl: string) => {
+        const fileExtension = videoUrl.split(".").pop()?.toLowerCase();
+        console.log("fileExtension", fileExtension);
+        if (fileExtension === "webm") {
+            setIsTranscodeNeeded(true);
+        } else {
+            setIsTranscodeNeeded(false);
+        }
+    };
+
     const load = async () => {
+        if (isLoaded) return;
+
         try {
-            if (isLoaded) return;
             const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm";
             const ffmpeg = ffmpegRef.current;
 
             ffmpeg.on("log", ({ message }: { message: string }) => {
                 if (messageRef.current)
                     messageRef.current.textContent = message;
-                console.log(message);
             });
 
             await ffmpeg.load({
@@ -38,26 +54,48 @@ export default function VideoPlayer() {
         }
     };
 
-    const transcode = async () => {
+    const transcode = async (
+        videoUrl: string,
+        startTime: number,
+        duration: number,
+    ) => {
         if (isTranscoding) return;
+
         setIsTranscoding(true);
 
         try {
             const ffmpeg = ffmpegRef.current;
 
-            await ffmpeg.writeFile(
-                "input.webm",
-                await fetchFile(
-                    "https://raw.githubusercontent.com/ffmpegwasm/testdata/master/Big_Buck_Bunny_180_10s.webm",
-                ),
-            );
+            const videoFile: Uint8Array = await fetchFile(videoUrl);
+            console.log("videoFile:", videoFile);
 
-            await ffmpeg.exec(["-i", "input.webm", "output.mp4"]);
+            await ffmpeg.writeFile("input.mkv", videoFile);
+
+            await ffmpeg.exec([
+                // TODO: remove these later
+                "-ss",
+                startTime.toString(),
+                "-t",
+                duration.toString(),
+                // TODO: until here
+                "-i",
+                "input.mkv",
+                "-c:v",
+                "libx264",
+                "-c:a",
+                "aac",
+                "-strict",
+                "experimental",
+                "output.mp4",
+            ]);
+
             const data = await ffmpeg.readFile("output.mp4");
 
             if (videoRef.current) {
-                videoRef.current.src = URL.createObjectURL(
-                    new Blob([data], { type: "video/mp4" }),
+                setVideoSrc(
+                    URL.createObjectURL(
+                        new Blob([data], { type: "video/mp4" }),
+                    ),
                 );
             }
         } catch (error) {
@@ -67,17 +105,43 @@ export default function VideoPlayer() {
         }
     };
 
+    useEffect(() => {
+        console.log("videoSrc:", videoSrc);
+        if (videoSrc) {
+            checkTranscodingNeeded(videoSrc);
+        }
+    }, [videoSrc]);
+
+    useEffect(() => {
+        console.log("isTranscodeNeeded:", isTranscodeNeeded);
+    }, [isTranscodeNeeded]);
+
     return isLoaded ? (
-        <>
-            <video ref={videoRef} controls></video>
+        <div className={"flex flex-col"}>
+            <video ref={videoRef} controls src={videoSrc || ""}></video>
             <br />
-            <button onClick={transcode}>Transcode webm to mp4</button>
-            <p ref={messageRef}></p>
-            <p>Open Developer Tools (Ctrl+Shift+I) to View Logs</p>
-        </>
+            <button
+                onClick={() =>
+                    transcode(
+                        `http://localhost:3000/api/download-and-stream?shortMagnet=${shortMagnet}`,
+                        60,
+                        6,
+                    )
+                }
+                className={"bg-myGreen text-xl"}
+                disabled={isTranscoding}
+            >
+                {isTranscoding
+                    ? "Transcoding..."
+                    : isTranscodeNeeded
+                      ? "Re-Transcode to MP4"
+                      : "Transcode to MP4"}
+            </button>
+            <p ref={messageRef} className={"text-icon text-xl"}></p>
+        </div>
     ) : (
-        <button onClick={load} className={"bg-myGreen "}>
-            Load ffmpeg-core (~31 MB)
+        <button onClick={load} className={"bg-myGreen"}>
+            Load FFmpeg Core
         </button>
     );
 }
