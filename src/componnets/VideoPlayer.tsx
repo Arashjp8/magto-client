@@ -1,6 +1,6 @@
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface Props {
     shortMagnet: string;
@@ -9,23 +9,13 @@ interface Props {
 export default function VideoPlayer({ shortMagnet }: Props) {
     const [isLoaded, setIsLoaded] = useState(false);
     const [isTranscoding, setIsTranscoding] = useState(false);
+    const [isTranscoded, setIsTranscoded] = useState(false);
     const [videoSrc, setVideoSrc] = useState<string | null>(null);
-    const [isTranscodeNeeded, setIsTranscodeNeeded] = useState(false);
     const ffmpegRef = useRef<FFmpeg>(new FFmpeg());
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const messageRef = useRef<HTMLParagraphElement | null>(null);
 
-    const checkTranscodingNeeded = (videoUrl: string) => {
-        const fileExtension = videoUrl.split(".").pop()?.toLowerCase();
-        console.log("fileExtension", fileExtension);
-        if (fileExtension === "webm") {
-            setIsTranscodeNeeded(true);
-        } else {
-            setIsTranscodeNeeded(false);
-        }
-    };
-
-    const load = async () => {
+    const load = useCallback(async () => {
         if (isLoaded) return;
 
         try {
@@ -52,71 +42,74 @@ export default function VideoPlayer({ shortMagnet }: Props) {
         } catch (error) {
             console.error("Failed to load FFmpeg:", error);
         }
-    };
+    }, [isLoaded]);
 
-    const transcode = async (
-        videoUrl: string,
-        startTime: number,
-        duration: number,
-    ) => {
-        if (isTranscoding) return;
+    useEffect(() => {
+        load();
+    }, [load]);
 
-        setIsTranscoding(true);
+    const transcode = useCallback(
+        async (videoUrl: string, startTime: number, duration: number) => {
+            if (isTranscoding) return;
 
-        try {
-            const ffmpeg = ffmpegRef.current;
+            setIsTranscoding(true);
 
-            const videoFile: Uint8Array = await fetchFile(videoUrl);
-            console.log("videoFile:", videoFile);
+            try {
+                const ffmpeg = ffmpegRef.current;
 
-            await ffmpeg.writeFile("input.mkv", videoFile);
+                const videoFile: Uint8Array = await fetchFile(videoUrl);
+                console.log("videoFile:", videoFile);
 
-            await ffmpeg.exec([
-                // TODO: remove these later
-                "-ss",
-                startTime.toString(),
-                "-t",
-                duration.toString(),
-                // TODO: until here
-                "-i",
-                "input.mkv",
-                "-c:v",
-                "libx264",
-                "-c:a",
-                "aac",
-                "-strict",
-                "experimental",
-                "output.mp4",
-            ]);
+                await ffmpeg.writeFile("input.mkv", videoFile);
 
-            const data = await ffmpeg.readFile("output.mp4");
+                await ffmpeg.exec([
+                    // TODO: remove these later
+                    "-ss",
+                    startTime.toString(),
+                    "-t",
+                    duration.toString(),
+                    // TODO: until here
+                    "-i",
+                    "input.mkv",
+                    "-c:v",
+                    "libx264",
+                    "-c:a",
+                    "aac",
+                    "-strict",
+                    "experimental",
+                    "output.mp4",
+                ]);
 
-            if (videoRef.current) {
-                setVideoSrc(
-                    URL.createObjectURL(
-                        new Blob([data], { type: "video/mp4" }),
-                    ),
-                );
+                const data = await ffmpeg.readFile("output.mp4");
+
+                if (videoRef.current) {
+                    setVideoSrc(
+                        URL.createObjectURL(
+                            new Blob([data], { type: "video/mp4" }),
+                        ),
+                    );
+                }
+            } catch (error) {
+                console.error("Transcoding failed:", error);
+            } finally {
+                setIsTranscoding(false);
+                setIsTranscoded(true);
             }
-        } catch (error) {
-            console.error("Transcoding failed:", error);
-        } finally {
-            setIsTranscoding(false);
-        }
-    };
+        },
+        [isTranscoding],
+    );
 
     useEffect(() => {
-        console.log("videoSrc:", videoSrc);
-        if (videoSrc) {
-            checkTranscodingNeeded(videoSrc);
+        if (isLoaded && !isTranscoded) {
+            transcode(
+                `http://localhost:3000/api/download-and-stream?shortMagnet=${shortMagnet}`,
+                60,
+                6,
+            );
         }
-    }, [videoSrc]);
+    }, [isLoaded, shortMagnet, isTranscoded, transcode]);
 
-    useEffect(() => {
-        console.log("isTranscodeNeeded:", isTranscodeNeeded);
-    }, [isTranscodeNeeded]);
-
-    return isLoaded ? (
+    return (
         <div className={"flex flex-col"}>
             <video ref={videoRef} controls src={videoSrc || ""}></video>
             <br />
@@ -133,15 +126,11 @@ export default function VideoPlayer({ shortMagnet }: Props) {
             >
                 {isTranscoding
                     ? "Transcoding..."
-                    : isTranscodeNeeded
-                      ? "Re-Transcode to MP4"
+                    : isTranscoded
+                      ? "ReTranscode to MP4"
                       : "Transcode to MP4"}
             </button>
             <p ref={messageRef} className={"text-icon text-xl"}></p>
         </div>
-    ) : (
-        <button onClick={load} className={"bg-myGreen"}>
-            Load FFmpeg Core
-        </button>
     );
 }
