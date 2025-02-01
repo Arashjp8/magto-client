@@ -1,7 +1,9 @@
+import VideoPlayer from "../componnets/VideoPlayer";
+
 export default function Watch() {
-  return (
-    <>
-      <div>Watch</div>
-    </>
-  );
+    return (
+        <>
+            <VideoPlayer />
+        </>
+    );
 }

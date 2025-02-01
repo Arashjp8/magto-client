@@ -6,73 +6,80 @@ import Seed from "../assets/icons/Seed";
 import { Torrent } from "../types/torrent";
 import { toast, Toaster } from "sonner";
 import Tick from "../assets/icons/Tick";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
-  isOpen: boolean;
-  torrent: Torrent;
+    isOpen: boolean;
+    torrent: Torrent;
 }
 
 type IconCopmonents = {
-  Component: ComponentType;
-  description: string | number;
-  content?: string;
+    Component: ComponentType;
+    description: string | number;
+    content?: string;
 };
 
 export default function Items({ isOpen, torrent }: Props) {
-  const iconComponents: IconCopmonents[] = [
-    { Component: Magnet, description: "Magnet", content: torrent.magnet },
-    { Component: Play, description: "Play" },
-    { Component: Seed, description: torrent.seeds },
-    { Component: Disk, description: torrent.size },
-  ];
+    const iconComponents: IconCopmonents[] = [
+        { Component: Magnet, description: "Magnet", content: torrent.magnet },
+        { Component: Play, description: "Play" },
+        { Component: Seed, description: torrent.seeds },
+        { Component: Disk, description: torrent.size },
+    ];
 
-  const copyToClipboard = (text: string) => {
-    if (!text) return;
+    const navigate = useNavigate();
 
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        toast.success("Copied to clipboard!", {
-          icon: <Tick />,
-        });
-      })
-      .catch((err) => {
-        toast.error("Failed to copy:");
-        console.error("Failed to copy:", err);
-      });
-  };
+    const copyToClipboard = (text: string) => {
+        if (!text) return;
 
-  return (
-    <div
-      className={`flex justify-between items-center ${isOpen ? "animate-fade-in" : ""}`}
-    >
-      {iconComponents.map(({ Component, description, content }, index) => {
-        return (
-          <div key={index} className={"flex gap-4"}>
-            <Toaster
-              position={"bottom-center"}
-              richColors
-              toastOptions={{
-                classNames: {
-                  toast: "font-mono",
-                  title: "text-lg",
+        navigator.clipboard
+            .writeText(text)
+            .then(() => {
+                toast.success("Copied to clipboard!", {
+                    icon: <Tick />,
+                });
+            })
+            .catch((err) => {
+                toast.error("Failed to copy:");
+                console.error("Failed to copy:", err);
+            });
+    };
+
+    return (
+        <div
+            className={`flex justify-between items-center ${isOpen ? "animate-fade-in" : ""}`}
+        >
+            {iconComponents.map(
+                ({ Component, description, content }, index) => {
+                    return (
+                        <div key={index} className={"flex gap-4"}>
+                            <Toaster
+                                position={"bottom-center"}
+                                richColors
+                                toastOptions={{
+                                    classNames: {
+                                        toast: "font-mono",
+                                        title: "text-lg",
+                                    },
+                                }}
+                            />
+                            <button
+                                className={`${description === "Play" || description === "Magnet" ? "cursor-pointer hover:text-myYeollow" : ""}`}
+                                onClick={() => {
+                                    if (description === "Magnet" && content) {
+                                        copyToClipboard(content);
+                                    } else if (description === "Play") {
+                                        navigate("/watch");
+                                    }
+                                }}
+                            >
+                                <Component />
+                            </button>
+                            <p>{description}</p>
+                        </div>
+                    );
                 },
-              }}
-            />
-            <button
-              className={`${description === "Play" || description === "Magnet" ? "cursor-pointer hover:text-myYeollow" : ""}`}
-              onClick={() => {
-                if (description === "Magnet" && content) {
-                  copyToClipboard(content);
-                }
-              }}
-            >
-              <Component />
-            </button>
-            <p>{description}</p>
-          </div>
-        );
-      })}
-    </div>
-  );
+            )}
+        </div>
+    );
 }
