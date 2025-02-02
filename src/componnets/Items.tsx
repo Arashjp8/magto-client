@@ -22,7 +22,7 @@ type IconCopmonents = {
 export default function Items({ isOpen, torrent }: Props) {
     const iconComponents: IconCopmonents[] = [
         { Component: Magnet, description: "Magnet", content: torrent.magnet },
-        { Component: Play, description: "Play" },
+        { Component: Play, description: "Play", },
         { Component: Seed, description: torrent.seeds },
         { Component: Disk, description: torrent.size },
     ];
