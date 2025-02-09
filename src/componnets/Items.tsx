@@ -1,12 +1,14 @@
-import { ComponentType } from "react";
+import { ComponentType, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast, Toaster } from "sonner";
+import { Torrent } from "../types/torrent";
+
 import Disk from "../assets/icons/Disk";
 import Magnet from "../assets/icons/Magnet";
 import Play from "../assets/icons/Play";
 import Seed from "../assets/icons/Seed";
-import { Torrent } from "../types/torrent";
-import { toast, Toaster } from "sonner";
 import Tick from "../assets/icons/Tick";
-import { useNavigate } from "react-router-dom";
+import { useWatchContext } from "../context/WatchContext/WatchContext";
 
 interface Props {
     isOpen: boolean;
@@ -22,10 +24,11 @@ type IconCopmonents = {
 export default function Items({ isOpen, torrent }: Props) {
     const iconComponents: IconCopmonents[] = [
         { Component: Magnet, description: "Magnet", content: torrent.magnet },
-        { Component: Play, description: "Play", },
+        { Component: Play, description: "Play" },
         { Component: Seed, description: torrent.seeds },
         { Component: Disk, description: torrent.size },
     ];
+    const { setWatchMagnet } = useWatchContext();
 
     const navigate = useNavigate();
 
@@ -69,7 +72,8 @@ export default function Items({ isOpen, torrent }: Props) {
                                     if (description === "Magnet" && content) {
                                         copyToClipboard(content);
                                     } else if (description === "Play") {
-                                        navigate("/watch");
+                                        navigate(`/watch/${torrent.id}`);
+                                        setWatchMagnet(torrent.magnet);
                                     }
                                 }}
                             >

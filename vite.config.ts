@@ -5,7 +5,12 @@ import tailwindcss from "@tailwindcss/vite";
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [react(), tailwindcss()],
-    optimizeDeps: {
-        exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
+    build: {
+        rollupOptions: {
+            treeshake: true,
+            output: {
+                manualChunks: {},
+            },
+        },
     },
 });

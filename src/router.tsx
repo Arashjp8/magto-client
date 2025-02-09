@@ -1,4 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
+
 import Home from "./pages/Home";
 import Layout from "./pages/Layout";
 import NotFound from "./pages/NotFound";
@@ -10,7 +11,7 @@ const router = createBrowserRouter([
         element: <Layout />,
         children: [
             { index: true, element: <Home /> },
-            { path: "watch", element: <Watch /> },
+            { path: "watch/:id", element: <Watch /> },
             { path: "*", element: <NotFound /> },
         ],
     },

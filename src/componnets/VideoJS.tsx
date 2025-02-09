@@ -1,16 +1,13 @@
 import { useEffect, useRef } from "react";
+import { VideoJsPlayerOptions } from "../types/videoJs";
 import videojs from "video.js";
 import Player from "video.js/dist/types/player";
-import "video.js/dist/video-js.css";
-import { VideoJsPlayerOptions } from "../types/videoJs";
+import { useWatchContext } from "../context/WatchContext/WatchContext";
 
-interface Props {
-    shortMagnet: string;
-}
-
-export default function VideoJS({ shortMagnet }: Props) {
+export default function VideoJS() {
     const videoRef = useRef<HTMLDivElement | null>(null);
     const playerRef = useRef<Player | null>(null);
+    const { watchMagnet } = useWatchContext();
 
     useEffect(() => {
         const videoJsOptions: VideoJsPlayerOptions = {
@@ -28,7 +25,9 @@ export default function VideoJS({ shortMagnet }: Props) {
             sources: [
                 {
                     type: "video/mp4",
-                    src: `${import.meta.env.VITE_SERVER_BASE_URL}/download-and-stream?shortMagnet=${shortMagnet}`,
+                    //src: `${import.meta.env.VITE_SERVER_BASE_URL}/download-and-stream?magnet=${shortMagnet}`,
+                    src: `${import.meta.env.VITE_SERVER_NEW_BASE_URL}/streaming?magnet=${watchMagnet}`,
+                    //src: "http://localhost:3000",
                 },
             ],
             controlBar: {
@@ -46,20 +45,17 @@ export default function VideoJS({ shortMagnet }: Props) {
         };
 
         if (!playerRef.current) {
-            console.log("if fired");
             const videoElement = document.createElement("video-js");
 
             videoElement.classList.add("vjs-big-play-centered");
             videoRef.current?.appendChild(videoElement);
 
             if (!videoElement) return;
-            console.log("after !videoElement");
 
             playerRef.current = videojs(videoElement, videoJsOptions);
 
             console.log(videojs.getAllPlayers());
         } else if (playerRef.current) {
-            console.log("esle if fired");
             playerRef.current.src(videoJsOptions.sources);
         }
 
@@ -69,7 +65,7 @@ export default function VideoJS({ shortMagnet }: Props) {
                 playerRef.current = null;
             }
         };
-    }, [shortMagnet]);
+    }, [watchMagnet]);
 
     return (
         <div

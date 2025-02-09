@@ -5,10 +5,10 @@ export async function apiClient(
     method: string,
     contentType: string,
     queryParam?: Record<string, string>,
-    responseType: "json" | "stream" = "json",
-): Promise<SearchApiResponse | Response> {
+): Promise<SearchApiResponse> {
     try {
-        const baseURL = `${import.meta.env.VITE_SERVER_BASE_URL}`;
+        //const baseURL = `${import.meta.env.VITE_SERVER_BASE_URL}`;
+        const baseURL = `${import.meta.env.VITE_SERVER_NEW_BASE_URL}`;
         const url = new URL(`${baseURL}/${endpoint}`);
 
         if (queryParam) {
@@ -30,16 +30,8 @@ export async function apiClient(
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        if (responseType === "json") {
-            const json = await response.json();
-            return json;
-        }
-
-        if (responseType === "stream") {
-            return response;
-        }
-
-        throw new Error("Invalid responseType");
+        const json = await response.json();
+        return json;
     } catch (error) {
         console.error(`Error while Fetching Data: ${error}`);
         throw error;

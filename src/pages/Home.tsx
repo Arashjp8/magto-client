@@ -18,14 +18,18 @@ export default function Home() {
         setIsLoading(true);
         setIsFading(true);
 
-        const res = await apiClient(
-            "movie-torrent",
-            "GET",
-            "application/json",
-            {
-                movie_name: movieName,
-            },
-        );
+        const res = await apiClient("search", "GET", "application/json", {
+            movie_name: movieName,
+        });
+
+        //const res = await apiClient(
+        //    "movie-torrent",
+        //    "GET",
+        //    "application/json",
+        //    {
+        //        movie_name: movieName,
+        //    },
+        //);
 
         setResponse(res);
     }, [movieName]);

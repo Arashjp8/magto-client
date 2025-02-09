@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Torrent } from "../types/torrent";
+import Items from "./Items";
+
 import ChevronDown from "../assets/icons/ChevronDown";
 import ChevronUp from "../assets/icons/ChevronUp";
-import Items from "./Items";
 
 interface Props {
     torrents: Torrent[];

@@ -1,6 +1,7 @@
-import { useRef } from "react";
+import { useRef, lazy } from "react";
 import { Toaster } from "sonner";
-import LoadingSpinner from "../assets/icons/LoadingSpinner";
+
+const LoadingSpinner = lazy(() => import("../assets/icons/LoadingSpinner"));
 
 interface SearchFormProps {
     isLoading: boolean;
