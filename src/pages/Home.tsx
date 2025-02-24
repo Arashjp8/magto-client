@@ -1,60 +1,47 @@
 import { useCallback, useEffect, useState } from "react";
-import { apiClient } from "../services/apiClient";
-import { SearchApiResponse } from "../types/searchApiResponse";
-import { Torrent } from "../types/torrent";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import SearchForm from "../componnets/SearchForm";
 import TorrentList from "../componnets/TorrentList";
-import { useSearchParams } from "react-router-dom";
 import useQuery from "../hooks/useQuery";
+import { apiClient } from "../services/apiClient";
+import { SearchApiResponse } from "../types/searchApiResponse";
 
 export default function Home() {
     const [searchParams, setSearchParams] = useSearchParams();
     const movieName = searchParams.get("q");
 
-    const [response, setResponse] = useState<SearchApiResponse | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [torrents, setTorrents] = useState<Torrent[] | null>(null);
-    const [isFading, setIsFading] = useState<boolean>(false);
+    // BUG: cache doesn't work on page back it only works when changin search query
+    // BUG: spinner keeps on spinning it's probably because of movieName
 
-    const { queryKey, data } = useQuery(
-        `${movieName}-search`,
-        { endpoint: "search", queryParams: { movie_name: movieName! } },
-        5000,
-    );
+    const queryFn = useCallback(async (): Promise<SearchApiResponse> => {
+        if (!movieName) throw new Error("Movie name is required!");
 
-    useEffect(() => {
-        console.log(data);
-        console.log(queryKey);
-    }, [queryKey, data]);
-
-    const fetchMagnets = useCallback(async () => {
-        if (!movieName) return;
-        setIsLoading(true);
-        setIsFading(true);
-
-        const res = await apiClient("search", "GET", "application/json", {
-            movie_name: movieName,
-        });
-
-        setResponse(res);
+        try {
+            const res = await apiClient("search", "GET", "application/json", {
+                movie_name: movieName,
+            });
+            return res;
+        } catch (err) {
+            console.error("Error while fetching data", err);
+            throw new Error("Error while fetching data");
+        }
     }, [movieName]);
 
-    useEffect(() => {
-        if (movieName) {
-            fetchMagnets();
-        }
-    }, [movieName, fetchMagnets]);
+    const { state } = useQuery<SearchApiResponse>(
+        `${movieName}-search`,
+        queryFn,
+    );
+
+    const [isFading, setIsFading] = useState<boolean>(false);
 
     useEffect(() => {
-        if (response) {
-            setTimeout(() => {
-                setTorrents(response.torrents);
-                setIsFading(false);
-            }, 300);
-            setIsLoading(false);
+        if (state.isLoading || state.isFetching) {
+            setIsFading(true);
+        } else {
+            setIsFading(false);
         }
-    }, [response]);
+    }, [state.isLoading, state.isFetching]);
 
     const handleSearch = (newMovieName: string) => {
         if (movieName === newMovieName) {
@@ -64,18 +51,16 @@ export default function Home() {
     };
 
     return (
-        <div
-            className={
-                "w-full lg:w-[50%] max-w-[1000px] p-6 text-xl lg:text-3xl text-icon flex flex-col gap-4"
-            }
-        >
-            <h2 className={"font-bold"}>Search For The Movie:</h2>
-            <SearchForm isLoading={isLoading} onSearch={handleSearch} />
+        <div className="w-full lg:w-[50%] max-w-[1000px] p-6 text-xl lg:text-3xl text-icon flex flex-col gap-4">
+            <h2 className="font-bold">Search For The Movie:</h2>
+            <SearchForm isLoading={state.isLoading} onSearch={handleSearch} />
 
             <div
                 className={`transition-opacity duration-300 ${isFading ? "opacity-0" : "opacity-100"}`}
             >
-                {torrents && <TorrentList torrents={torrents} />}
+                {state.data?.torrents && (
+                    <TorrentList torrents={state.data.torrents} />
+                )}
             </div>
         </div>
     );

@@ -51,8 +51,6 @@ export default function VideoJS() {
             if (!videoElement) return;
 
             playerRef.current = videojs(videoElement, videoJsOptions);
-
-            console.log(videojs.getAllPlayers());
         } else if (playerRef.current) {
             playerRef.current.src(videoJsOptions.sources);
         }
