@@ -1,4 +1,4 @@
-import { ComponentType, useEffect } from "react";
+import { ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, Toaster } from "sonner";
 import { Torrent } from "../types/torrent";

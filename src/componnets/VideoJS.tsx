@@ -25,9 +25,7 @@ export default function VideoJS() {
             sources: [
                 {
                     type: "video/mp4",
-                    //src: `${import.meta.env.VITE_SERVER_BASE_URL}/download-and-stream?magnet=${shortMagnet}`,
                     src: `${import.meta.env.VITE_SERVER_NEW_BASE_URL}/streaming?magnet=${watchMagnet}`,
-                    //src: "http://localhost:3000",
                 },
             ],
             controlBar: {

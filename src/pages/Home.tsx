@@ -5,13 +5,28 @@ import { Torrent } from "../types/torrent";
 import { toast } from "sonner";
 import SearchForm from "../componnets/SearchForm";
 import TorrentList from "../componnets/TorrentList";
+import { useSearchParams } from "react-router-dom";
+import useQuery from "../hooks/useQuery";
 
 export default function Home() {
-    const [movieName, setMovieName] = useState<string | null>(null);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const movieName = searchParams.get("q");
+
     const [response, setResponse] = useState<SearchApiResponse | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [torrents, setTorrents] = useState<Torrent[] | null>(null);
     const [isFading, setIsFading] = useState<boolean>(false);
+
+    const { queryKey, data } = useQuery(
+        `${movieName}-search`,
+        { endpoint: "search", queryParams: { movie_name: movieName! } },
+        5000,
+    );
+
+    useEffect(() => {
+        console.log(data);
+        console.log(queryKey);
+    }, [queryKey, data]);
 
     const fetchMagnets = useCallback(async () => {
         if (!movieName) return;
@@ -21,15 +36,6 @@ export default function Home() {
         const res = await apiClient("search", "GET", "application/json", {
             movie_name: movieName,
         });
-
-        //const res = await apiClient(
-        //    "movie-torrent",
-        //    "GET",
-        //    "application/json",
-        //    {
-        //        movie_name: movieName,
-        //    },
-        //);
 
         setResponse(res);
     }, [movieName]);
@@ -54,7 +60,7 @@ export default function Home() {
         if (movieName === newMovieName) {
             return toast.error("Already Searched!");
         }
-        setMovieName(newMovieName);
+        setSearchParams({ q: newMovieName });
     };
 
     return (
