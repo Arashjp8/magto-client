@@ -59,7 +59,7 @@ export default function useQuery<T>(
     const [state, setState] = useState<IQueryState<T>>({
         data: null,
         error: null,
-        isLoading: false,
+        isLoading: true,
         isFetching: false,
     });
 
@@ -75,20 +75,21 @@ export default function useQuery<T>(
                 prev.data === existingData.data
                     ? prev
                     : {
-                          data: existingData.data,
-                          error: null,
-                          isLoading: false,
-                          isFetching: false,
-                      },
+                        ...prev,
+                        data: existingData.data,
+                        isLoading: false,
+                        isFetching: false,
+                    },
             );
             return;
         }
 
-        setState((prev) => ({
-            ...prev,
+        setState({
+            data: null,
+            error: null,
             isLoading: true,
             isFetching: true,
-        }));
+        });
 
         try {
             const result = await queryFn();
@@ -105,24 +106,19 @@ export default function useQuery<T>(
                 timeStamp: nowTimeStamp,
                 staleTime,
             });
-            return;
         } catch (err) {
-            setState((prev) => ({
-                ...prev,
+            setState({
+                data: null,
                 error: err as Error,
-            }));
-        } finally {
-            setState((prev) => ({
-                ...prev,
                 isLoading: false,
                 isFetching: false,
-            }));
+            });
         }
     }, [queryKey, queryFn, staleTime]);
 
     useEffect(() => {
         fetchData();
-    }, [queryKey, fetchData]);
+    }, [fetchData]);
 
     return { state, refetch: fetchData };
 }

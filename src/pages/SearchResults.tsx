@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import SearchForm from "../componnets/SearchForm";
@@ -14,15 +14,14 @@ export default function SearchResults() {
     const fetchOptions = useCallback(async (): Promise<SearchApiResponse> => {
         if (!movieName) throw new Error("Movie name is required!");
 
-        try {
-            const res = await apiClient("search", "GET", "application/json", {
+        return await apiClient<SearchApiResponse>(
+            "search",
+            "GET",
+            "application/json",
+            {
                 movie_name: movieName,
-            });
-            return res;
-        } catch (err) {
-            console.error("Error while fetching data", err);
-            throw new Error("Error while fetching data");
-        }
+            },
+        );
     }, [movieName]);
 
     const { state: mediaOpts } = useQuery<SearchApiResponse>(
@@ -30,15 +29,15 @@ export default function SearchResults() {
         fetchOptions,
     );
 
-    const [isFading, setIsFading] = useState<boolean>(false);
+    const isFading = mediaOpts.isLoading || mediaOpts.isFetching;
 
-    useEffect(() => {
-        if (mediaOpts.isLoading || mediaOpts.isFetching) {
-            setIsFading(true);
-        } else {
-            setIsFading(false);
-        }
-    }, [mediaOpts.isLoading, mediaOpts.isFetching]);
+    if (mediaOpts.error) {
+        return (
+            <div className={"text-icon"}>
+                <p>Error: {mediaOpts.error.message}</p>
+            </div>
+        );
+    }
 
     return (
         <div
