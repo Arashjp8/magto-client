@@ -1,4 +1,5 @@
-import { useRef, lazy } from "react";
+import { useRef, lazy, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Toaster } from "sonner";
 
 const LoadingSpinner = lazy(() => import("../assets/icons/LoadingSpinner"));
@@ -10,6 +11,14 @@ interface SearchFormProps {
 
 export default function SearchForm({ isLoading, onSearch }: SearchFormProps) {
     const ref = useRef<HTMLInputElement>(null);
+    const [searchParams] = useSearchParams();
+    const queryFormURL = searchParams.get("q") || "";
+
+    useEffect(() => {
+        if (ref.current) {
+            ref.current.value = queryFormURL;
+        }
+    }, [queryFormURL]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
