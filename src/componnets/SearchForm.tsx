@@ -1,24 +1,25 @@
 import { useRef, lazy, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Toaster } from "sonner";
 
 const LoadingSpinner = lazy(() => import("../assets/icons/LoadingSpinner"));
 
 interface SearchFormProps {
-    isLoading: boolean;
-    onSearch: (movieName: string) => void;
+    isLoading?: boolean;
 }
 
-export default function SearchForm({ isLoading, onSearch }: SearchFormProps) {
+export default function SearchForm({ isLoading = false }: SearchFormProps) {
     const ref = useRef<HTMLInputElement>(null);
+    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const queryFormURL = searchParams.get("q") || "";
+
+    const queryFromURL = searchParams.get("q") || "";
 
     useEffect(() => {
         if (ref.current) {
-            ref.current.value = queryFormURL;
+            ref.current.value = queryFromURL;
         }
-    }, [queryFormURL]);
+    }, [queryFromURL]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -27,7 +28,8 @@ export default function SearchForm({ isLoading, onSearch }: SearchFormProps) {
         const movieName = ref.current.value.trim();
         if (!movieName) return;
 
-        onSearch(movieName);
+        // Navigate to results page with query
+        navigate(`/results?q=${encodeURIComponent(movieName)}`);
         ref.current.blur();
     };
 
