@@ -25,7 +25,7 @@ export default function SearchResults() {
         }
     }, [movieName]);
 
-    const { state } = useQuery<SearchApiResponse>(
+    const { state: mediaOpts } = useQuery<SearchApiResponse>(
         `${movieName}-search`,
         fetchOptions,
     );
@@ -33,12 +33,12 @@ export default function SearchResults() {
     const [isFading, setIsFading] = useState<boolean>(false);
 
     useEffect(() => {
-        if (state.isLoading || state.isFetching) {
+        if (mediaOpts.isLoading || mediaOpts.isFetching) {
             setIsFading(true);
         } else {
             setIsFading(false);
         }
-    }, [state.isLoading, state.isFetching]);
+    }, [mediaOpts.isLoading, mediaOpts.isFetching]);
 
     return (
         <div
@@ -47,13 +47,13 @@ export default function SearchResults() {
             }
         >
             <h2 className={"font-bold"}>Search Results:</h2>
-            <SearchForm isLoading={state.isLoading} />
+            <SearchForm isLoading={mediaOpts.isLoading} />
 
             <div
                 className={`transition-opacity duration-300 ${isFading ? "opacity-0" : "opacity-100"}`}
             >
-                {state.data?.torrents && (
-                    <TorrentList torrents={state.data.torrents} />
+                {mediaOpts.data?.torrents && (
+                    <TorrentList torrents={mediaOpts.data.torrents} />
                 )}
             </div>
         </div>
