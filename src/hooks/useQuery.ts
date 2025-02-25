@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface IQueryState<T> {
     data: T | null;
@@ -18,6 +18,8 @@ interface IUseQueryReturn<T> {
     state: IQueryState<T>;
 }
 
+const cache = new Map<string, IMapValue<unknown>>();
+
 /**
  * Custom hook for data fetching with caching and cache invalidation based on `staleTime`.
  *
@@ -29,7 +31,7 @@ interface IUseQueryReturn<T> {
  *
  * @param {string} queryKey The unique key for the query to use for caching.
  * @param {() => Promise<T>} queryFn The function that fetches the data, which should return a Promise.
- * @param {number} [staleTime=30 * 60 * 1000] The time in milliseconds before the cached data is considered stale. Defaults to 30 minutes.
+ * @param {number} [staleTime=10 * 60 * 1000] The time in milliseconds before the cached data is considered stale. Defaults to 10 minutes.
  *
  * @returns {IUseQueryReturn<T>} The result of the query containing the current query state and a refetch function.
  *
@@ -52,7 +54,7 @@ interface IUseQueryReturn<T> {
 export default function useQuery<T>(
     queryKey: string,
     queryFn: () => Promise<T>,
-    staleTime: number = 30 * 60 * 1000, // 30 minutes
+    staleTime: number = 10 * 60 * 1000, // 10 minutes
 ): IUseQueryReturn<T> {
     const [state, setState] = useState<IQueryState<T>>({
         data: null,
@@ -60,10 +62,9 @@ export default function useQuery<T>(
         isLoading: false,
         isFetching: false,
     });
-    const cacheRef = useRef(new Map<string, IMapValue<T>>());
 
     const fetchData = useCallback(async () => {
-        const existingData = cacheRef.current.get(queryKey);
+        const existingData = cache.get(queryKey) as IMapValue<T> | undefined;
         const nowTimeStamp = Date.now();
 
         if (
@@ -99,7 +100,7 @@ export default function useQuery<T>(
                 isFetching: false,
             });
 
-            cacheRef.current.set(queryKey, {
+            cache.set(queryKey, {
                 data: result,
                 timeStamp: nowTimeStamp,
                 staleTime,

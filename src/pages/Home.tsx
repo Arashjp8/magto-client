@@ -11,9 +11,7 @@ export default function Home() {
     const [searchParams, setSearchParams] = useSearchParams();
     const movieName = searchParams.get("q");
 
-    // BUG: cache doesn't work on page back it only works when changin search query
-
-    const queryFn = useCallback(async (): Promise<SearchApiResponse> => {
+    const fetchOptions = useCallback(async (): Promise<SearchApiResponse> => {
         if (!movieName) throw new Error("Movie name is required!");
 
         try {
@@ -29,7 +27,7 @@ export default function Home() {
 
     const { state } = useQuery<SearchApiResponse>(
         `${movieName}-search`,
-        queryFn,
+        fetchOptions,
     );
 
     const [isFading, setIsFading] = useState<boolean>(false);
