@@ -1,13 +1,13 @@
 import { ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast, Toaster } from "sonner";
-import { Torrent } from "../types/torrent";
 
 import Disk from "../assets/icons/Disk";
 import Magnet from "../assets/icons/Magnet";
 import Play from "../assets/icons/Play";
 import Seed from "../assets/icons/Seed";
 import Tick from "../assets/icons/Tick";
+import { Torrent } from "../types/torrent";
 import { useWatchContext } from "../context/WatchContext/WatchContext";
 
 interface Props {
@@ -29,7 +29,6 @@ export default function Items({ isOpen, torrent }: Props) {
         { Component: Disk, description: torrent.size },
     ];
     const { setWatchMagnet } = useWatchContext();
-
     const navigate = useNavigate();
 
     const copyToClipboard = (text: string) => {

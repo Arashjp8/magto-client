@@ -14,47 +14,41 @@ interface IMapValue<T> {
 }
 
 interface IUseQueryReturn<T> {
-    refetch: () => Promise<void>;
     state: IQueryState<T>;
+    refetch: (invalidateCache?: boolean) => Promise<void>;
+    clearCache: (key: string) => void;
 }
 
 const cache = new Map<string, IMapValue<unknown>>();
 
 /**
- * Custom hook for data fetching with caching and cache invalidation based on `staleTime`.
- *
- * This hook will attempt to fetch data using the provided `queryFn`. It checks the cache first and returns cached data
- * if it's still valid (within the `staleTime` period). If the data is not available or is stale, it triggers a fetch
- * operation to retrieve fresh data.
+ * A custom React hook for fetching and caching data with automatic retries, stale time management, and cache invalidation.
  *
  * @template T The type of data returned by the query function.
- *
- * @param {string} queryKey The unique key for the query to use for caching.
- * @param {() => Promise<T>} queryFn The function that fetches the data, which should return a Promise.
- * @param {number} [staleTime=10 * 60 * 1000] The time in milliseconds before the cached data is considered stale. Defaults to 10 minutes.
- *
- * @returns {IUseQueryReturn<T>} The result of the query containing the current query state and a refetch function.
+ * @param {string} queryKey A unique key for identifying the cached data.
+ * @param {() => Promise<T>} queryFn An asynchronous function that fetches the data.
+ * @param {number} [staleTime=600000] The duration (in milliseconds) before cached data is considered stale. Default is 10 minutes.
+ * @returns {IUseQueryReturn<T>} An object containing the query state, a refetch function, and a cache clearing function.
  *
  * @example
- * ```typescript
- * const { state, refetch } = useQuery('search-movies', fetchMovies);
+ *```typescript
+ * // Basic usage
+ * const { state, refetch, clearCache } = useQuery("userData", fetchUserData, 5 * 60 * 1000);
  *
- * if (state.isLoading) {
- *     // Show loading indicator
- * }
+ * console.log(state.data); // Retrieved user data
+ * console.log(state.isLoading); // Indicates if the query is loading
  *
- * if (state.error) {
- *     // Handle error
- * }
+ * // Manually refetching data and invalidating cache
+ * await refetch(true);
  *
- * // To refetch data
- * refetch();
+ * // Clearing the cache for a specific query
+ * clearCache("userData");
  * ```
  */
 export default function useQuery<T>(
     queryKey: string,
     queryFn: () => Promise<T>,
-    staleTime: number = 10 * 60 * 1000, // 10 minutes
+    staleTime: number = 10 * 60 * 1000, // Default: 10 minutes
 ): IUseQueryReturn<T> {
     const [state, setState] = useState<IQueryState<T>>({
         data: null,
@@ -63,62 +57,92 @@ export default function useQuery<T>(
         isFetching: false,
     });
 
-    const fetchData = useCallback(async () => {
-        const existingData = cache.get(queryKey) as IMapValue<T> | undefined;
-        const nowTimeStamp = Date.now();
+    const fetchData = useCallback(
+        async (invalidateCache = false) => {
+            const nowTimeStamp = Date.now();
+            const cachedData = cache.get(queryKey) as IMapValue<T> | undefined;
 
-        if (
-            existingData &&
-            nowTimeStamp - existingData.timeStamp <= existingData.staleTime
-        ) {
-            setState((prev) =>
-                prev.data === existingData.data
-                    ? prev
-                    : {
-                        ...prev,
-                        data: existingData.data,
-                        isLoading: false,
-                        isFetching: false,
-                    },
-            );
-            return;
-        }
+            if (
+                !invalidateCache &&
+                cachedData &&
+                nowTimeStamp - cachedData.timeStamp <= cachedData.staleTime
+            ) {
+                setState((prev) => ({
+                    ...prev,
+                    data: cachedData.data,
+                    isLoading: false,
+                    isFetching: false,
+                }));
+                return;
+            }
 
-        setState({
-            data: null,
-            error: null,
-            isLoading: true,
-            isFetching: true,
-        });
+            setState((prev) => ({
+                ...prev,
+                isFetching: true,
+                isLoading: prev.data === null,
+            }));
 
-        try {
-            const result = await queryFn();
+            try {
+                const result = await queryFn();
 
-            setState({
-                data: result,
-                error: null,
-                isLoading: false,
-                isFetching: false,
-            });
+                setState({
+                    data: result,
+                    error: null,
+                    isLoading: false,
+                    isFetching: false,
+                });
 
-            cache.set(queryKey, {
-                data: result,
-                timeStamp: nowTimeStamp,
-                staleTime,
-            });
-        } catch (err) {
-            setState({
-                data: null,
-                error: err as Error,
-                isLoading: false,
-                isFetching: false,
-            });
-        }
-    }, [queryKey, queryFn, staleTime]);
+                cache.set(queryKey, {
+                    data: result,
+                    timeStamp: nowTimeStamp,
+                    staleTime,
+                });
+            } catch (err) {
+                setState((prev) => ({
+                    ...prev,
+                    error: err as Error,
+                    isLoading: false,
+                    isFetching: false,
+                }));
+            }
+        },
+        [queryKey, queryFn, staleTime],
+    );
+
+    const fetchDataWithRetry = useCallback(
+        async (invalidateCache = false) => {
+            let retries = 3;
+            while (retries > 0) {
+                try {
+                    await fetchData(invalidateCache);
+                    return;
+                } catch (err) {
+                    retries--;
+                    if (retries === 0) {
+                        setState((prev) => ({
+                            ...prev,
+                            error: err as Error,
+                            isLoading: false,
+                            isFetching: false,
+                        }));
+                    } else {
+                        await new Promise((resolve) =>
+                            setTimeout(resolve, 1000),
+                        );
+                    }
+                }
+            }
+        },
+        [fetchData],
+    );
+
+    const clearCache = useCallback((key: string) => {
+        cache.delete(key);
+    }, []);
 
     useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+        fetchDataWithRetry();
+    }, [fetchDataWithRetry]);
 
-    return { state, refetch: fetchData };
+    return { state, refetch: fetchDataWithRetry, clearCache };
 }

@@ -46,7 +46,9 @@ export default function SearchResults() {
             }
         >
             <h2 className={"font-bold"}>Search Results:</h2>
-            <SearchForm isLoading={mediaOpts.isLoading} />
+            <SearchForm
+                isLoading={mediaOpts.isLoading || mediaOpts.isFetching}
+            />
 
             <div
                 className={`transition-opacity duration-300 ${isFading ? "opacity-0" : "opacity-100"}`}
