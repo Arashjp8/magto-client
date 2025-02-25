@@ -12,7 +12,6 @@ export default function Home() {
     const movieName = searchParams.get("q");
 
     // BUG: cache doesn't work on page back it only works when changin search query
-    // BUG: spinner keeps on spinning it's probably because of movieName
 
     const queryFn = useCallback(async (): Promise<SearchApiResponse> => {
         if (!movieName) throw new Error("Movie name is required!");

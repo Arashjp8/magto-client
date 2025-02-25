@@ -111,7 +111,11 @@ export default function useQuery<T>(
                 error: err as Error,
             }));
         } finally {
-            setState((prev) => ({ ...prev, isFetching: false }));
+            setState((prev) => ({
+                ...prev,
+                isLoading: false,
+                isFetching: false,
+            }));
         }
     }, [queryKey, queryFn, staleTime]);
 
