@@ -11,6 +11,7 @@ interface Props {
 
 export default function TorrentList({ torrents }: Props) {
     const [openItems, setOpenItems] = useState<Set<string>>(new Set());
+    const TITLE_LIMIT = 64;
 
     const handleClick = (id: string) => {
         setOpenItems((prev) => {
@@ -25,19 +26,26 @@ export default function TorrentList({ torrents }: Props) {
     };
 
     return (
-        <ul className={"flex flex-col gap-3"}>
+        <ul className="flex flex-col gap-3">
             {torrents.map((torrent) => {
                 const isOpen = openItems.has(torrent.id);
+                const isTruncated = torrent.title.length > TITLE_LIMIT;
+                const displayedTitle =
+                    isOpen || !isTruncated
+                        ? torrent.title
+                        : `${torrent.title.slice(0, TITLE_LIMIT)}...`;
 
                 return (
                     <li
                         key={torrent.id}
-                        className={`flex flex-col px-4 py-6 justify-between overflow-hidden transition-[height] duration-300 ease-in-out ${isOpen ? "h-44" : "h-20"} text-lg lg:text-xl bg-background2 border-2 border-myGrey rounded-xl`}
+                        className={`flex flex-col px-4 py-6 justify-between overflow-hidden transition-[height] duration-300 ease-in-out ${
+                            isOpen ? "h-44" : "h-20"
+                        } text-lg lg:text-xl bg-background2 border-2 border-myGrey rounded-xl`}
                     >
-                        <div className={"w-full flex justify-between"}>
-                            <p>{torrent.title}</p>
+                        <div className="w-full flex justify-between">
+                            <p>{displayedTitle}</p>
                             <button
-                                className={`h-fit flex justify-center items-center cursor-pointer hover:text-myYeollow`}
+                                className="h-fit flex justify-center items-center cursor-pointer hover:text-myYellow"
                                 onClick={() => handleClick(torrent.id)}
                             >
                                 {isOpen ? <ChevronUp /> : <ChevronDown />}

@@ -1,14 +1,14 @@
 import { ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 
 import Disk from "../assets/icons/Disk";
 import Magnet from "../assets/icons/Magnet";
 import Play from "../assets/icons/Play";
 import Seed from "../assets/icons/Seed";
 import Tick from "../assets/icons/Tick";
-import { Torrent } from "../types/torrent";
 import { useWatchContext } from "../context/WatchContext/WatchContext";
+import { Torrent } from "../types/torrent";
 
 interface Props {
     isOpen: boolean;
@@ -55,16 +55,6 @@ export default function Items({ isOpen, torrent }: Props) {
                 ({ Component, description, content }, index) => {
                     return (
                         <div key={index} className={"flex gap-4"}>
-                            <Toaster
-                                position={"bottom-center"}
-                                richColors
-                                toastOptions={{
-                                    classNames: {
-                                        toast: "font-mono",
-                                        title: "text-lg",
-                                    },
-                                }}
-                            />
                             <button
                                 className={`${description === "Play" || description === "Magnet" ? "cursor-pointer hover:text-myYeollow" : ""}`}
                                 onClick={() => {
