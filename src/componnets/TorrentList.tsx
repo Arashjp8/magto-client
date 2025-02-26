@@ -59,7 +59,7 @@ export default function TorrentList({ torrents }: Props) {
                     <li
                         key={torrent.id}
                         className={`flex flex-col px-4 py-6 justify-between overflow-hidden transition-[height] duration-300 ease-in-out ${isOpen ? "h-44" : "h-20"
-                            } text-lg lg:text-xl bg-background2 border-2 border-myGrey rounded-xl`}
+                            } text-sm md:text-lg lg:text-xl bg-background2 border-2 border-myGrey rounded-xl`}
                     >
                         <div className={"w-full flex justify-between"}>
                             <p>{displayedTitle}</p>
