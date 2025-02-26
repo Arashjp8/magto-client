@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
 import { Torrent } from "../types/torrent";
 import Items from "./Items";
-
+import { useWindowSize } from "../hooks/useWidowSize";
 import ChevronDown from "../assets/icons/ChevronDown";
 import ChevronUp from "../assets/icons/ChevronUp";
 
@@ -11,7 +12,23 @@ interface Props {
 
 export default function TorrentList({ torrents }: Props) {
     const [openItems, setOpenItems] = useState<Set<string>>(new Set());
-    const TITLE_LIMIT = 64;
+    const [titleLimit, setTitleLimit] = useState(64);
+    const { width } = useWindowSize();
+
+    useEffect(() => {
+        if (width) {
+            if (width < 640) {
+                // mobile
+                setTitleLimit(24);
+            } else if (width < 1024) {
+                // tablet
+                setTitleLimit(48);
+            } else {
+                // desktop
+                setTitleLimit(64);
+            }
+        }
+    }, [width]);
 
     const handleClick = (id: string) => {
         setOpenItems((prev) => {
@@ -25,27 +42,31 @@ export default function TorrentList({ torrents }: Props) {
         });
     };
 
+    const truncateTitle = (title: string, limit: number) => {
+        if (title.length <= limit) return title;
+        return `${title.slice(0, limit)}...`;
+    };
+
     return (
-        <ul className="flex flex-col gap-3">
+        <ul className={"flex flex-col gap-3"}>
             {torrents.map((torrent) => {
                 const isOpen = openItems.has(torrent.id);
-                const isTruncated = torrent.title.length > TITLE_LIMIT;
-                const displayedTitle =
-                    isOpen || !isTruncated
-                        ? torrent.title
-                        : `${torrent.title.slice(0, TITLE_LIMIT)}...`;
+                const displayedTitle = isOpen
+                    ? torrent.title
+                    : truncateTitle(torrent.title, titleLimit);
 
                 return (
                     <li
                         key={torrent.id}
-                        className={`flex flex-col px-4 py-6 justify-between overflow-hidden transition-[height] duration-300 ease-in-out ${
-                            isOpen ? "h-44" : "h-20"
-                        } text-lg lg:text-xl bg-background2 border-2 border-myGrey rounded-xl`}
+                        className={`flex flex-col px-4 py-6 justify-between overflow-hidden transition-[height] duration-300 ease-in-out ${isOpen ? "h-44" : "h-20"
+                            } text-lg lg:text-xl bg-background2 border-2 border-myGrey rounded-xl`}
                     >
-                        <div className="w-full flex justify-between">
+                        <div className={"w-full flex justify-between"}>
                             <p>{displayedTitle}</p>
                             <button
-                                className="h-fit flex justify-center items-center cursor-pointer hover:text-myYellow"
+                                className={
+                                    "h-fit flex justify-center items-center cursor-pointer hover:text-myYellow"
+                                }
                                 onClick={() => handleClick(torrent.id)}
                             >
                                 {isOpen ? <ChevronUp /> : <ChevronDown />}
